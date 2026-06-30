@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.project_name }} - CoreIDE Workspace{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/editor.css') }}">
+<style>
+    /* Prevent default scroll on body inside IDE */
+    body {
+        overflow: hidden;
+    }
+    
+    /* IDE toolbar styles */
+    .editor-toolbar {
+        height: 38px;
+        background: #141416;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        justify-content: space-between;
+    }
+    
+    .editor-options {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .editor-options select, .editor-options button {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        outline: none;
+    }
+    
+    .editor-options button:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--border-hover);
+    }
+    
+    #save-status {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+    }
+    
+    /* Fix tab layout */
+    .tab-bar::-webkit-scrollbar {
+        height: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ide-container">
+    
+    <!-- Left Sidebar: File explorer tree -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2 id="project-header-title" data-project-id="{{ project.id }}">{{ project.project_name }}</h2>
+            <div class="sidebar-actions">
+                <button onclick="window.tree.promptCreate(null, false)" title="New File">📄+</button>
+                <button onclick="window.tree.promptCreate(null, true)" title="New Folder">📁+</button>
+                <button onclick="window.tree.load()" title="Refresh Tree">🔄</button>
+            </div>
+        </div>
+        <ul id="file-tree" class="file-tree">
+            <!-- Dynamically populated via treeview.js -->
+        </ul>
+    </div>
+    
+    <!-- Center Panel: Tab bar, Monaco, and Console output -->
+    <div class="main-editor-area">
+        <!-- Open File Tabs -->
+        <div id="tab-bar" class="tab-bar">
+            <!-- Dynamically rendered tabs -->
+        </div>
+        
+        <!-- Editor Controls Toolbar -->
+        <div class="editor-toolbar">
+            <div class="editor-options">
+                <select id="theme-selector" onchange="setTheme(this.value)">
+                    <option value="vs-dark">Dark Theme (VS-Dark)</option>
+                    <option value="vs">Light Theme (VS)</option>
+                </select>
+                <button onclick="changeFontSize('increase')" title="Zoom In">A +</button>
+                <button onclick="changeFontSize('decrease')" title="Zoom Out">A -</button>
+            </div>
+            
+            <div>
+                <span id="save-status">Saved</span>
+            </div>
+        </div>
+        
+        <!-- Monaco Code Editor Area -->
+        <div class="editor-container-wrapper">
+            <div id="monaco-editor"></div>
+        </div>
+        
+        <!-- Terminal Panel -->
+        <div class="terminal-panel">
+            <div class="terminal-header">
+                <div class="terminal-tabs">
+                    <span class="terminal-tab active">Execution Console</span>
+                </div>
+                
+                <div class="terminal-actions">
+                    <span class="terminal-stats">
+                        Time: <span id="stats-timer">0.00s</span> | Mem: <span id="stats-memory">0.0MB</span>
+                    </span>
+                    <button class="btn btn-secondary" onclick="clearConsole()" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Clear Console</button>
+                    <button id="run-btn" class="btn btn-primary" onclick="executeCode()" style="padding: 0.25rem 0.75rem; font-size: 0.75rem;">⚡ Run Code</button>
+                </div>
+            </div>
+            
+            <div class="terminal-body">
+                <!-- Terminal Console Log Output -->
+                <pre id="console-output" class="console-output">[Select a file and click "Run Code" to compile & display outputs here]</pre>
+                
+                <!-- Terminal Standard Input (stdin) Panel -->
+                <div class="stdin-panel">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Standard Input (stdin)</span>
+                    <textarea id="stdin-input" placeholder="Type runtime keyboard inputs here (one per line)..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Panel: AI Coding Assistant -->
+    <div class="ai-panel">
+        <div class="ai-header">
+            <span>🤖</span>
+            <h2>AI Code Assistant</h2>
+        </div>
+        
+        <div id="ai-chat-history" class="ai-chat-history">
+            <div class="ai-message assistant">
+                Hello! I am your AI coding companion. Select a file from the explorer and click one of the quick actions below, or write a custom prompt to ask questions.
+            </div>
+        </div>
+        
+        <div class="ai-input-area">
+            <div class="ai-actions-grid">
+                <button class="ai-action-btn" onclick="askAI('Explain this active code block')">💡 Explain Code</button>
+                <button class="ai-action-btn" onclick="askAI('Scan for syntax compile errors')">🐛 Debug Errors</button>
+                <button class="ai-action-btn" onclick="askAI('Optimize space/time execution')">⚡ Optimize Code</button>
+                <button class="ai-action-btn" onclick="askAI('Generate standard boilerplate')">⚙️ Generate Code</button>
+            </div>
+            
+            <div class="ai-input-group">
+                <input type="text" id="ai-prompt-input" placeholder="Ask AI a question..." onkeydown="if(event.key === 'Enter') askAI()">
+                <button onclick="askAI()">➔</button>
+            </div>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block extra_js %}
+<!-- RequireJS CDN Loader for Monaco Editor -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+<script src="{{ url_for('static', filename='js/treeview.js') }}"></script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+<script>
+    // Initialize workspace on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        const projectId = parseInt(document.getElementById('project-header-title').dataset.projectId);
+        window.projectId = projectId;
+        
+        // Load file tree view instance
+        window.tree = new FileTree(projectId, 'file-tree');
+        
+        // Initialize Monaco Editor
+        initMonaco();
+    });
+</script>
+{% endblock %}

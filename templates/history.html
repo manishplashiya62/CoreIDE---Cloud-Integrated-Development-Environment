@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Execution History - CoreIDE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        max-width: 1100px;
+        margin: 2.5rem auto;
+        padding: 0 1.5rem;
+    }
+    
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .history-header h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+    
+    .filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .filter-bar select {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-family: var(--font-sans);
+        cursor: pointer;
+        outline: none;
+    }
+    
+    .filter-bar select:focus {
+        border-color: var(--accent-indigo);
+    }
+    
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .history-table th,
+    .history-table td {
+        padding: 1rem 1.25rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .history-table th {
+        font-weight: 600;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        background: rgba(255, 255, 255, 0.02);
+        position: sticky;
+        top: 0;
+    }
+    
+    .history-table tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .lang-badge {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        font-family: var(--font-mono);
+        text-transform: capitalize;
+    }
+    
+    .lang-badge.python { background: rgba(59, 130, 246, 0.12); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25); }
+    .lang-badge.javascript { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+    .lang-badge.c { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.25); }
+    .lang-badge.cpp { background: rgba(139, 92, 246, 0.12); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.25); }
+    .lang-badge.java { background: rgba(244, 63, 94, 0.12); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.25); }
+    
+    .output-preview {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    
+    .output-preview.has-error {
+        color: var(--danger);
+    }
+    
+    .metric {
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: var(--text-primary);
+    }
+    
+    .metric-unit {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-left: 2px;
+    }
+    
+    .code-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 500;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .code-modal-overlay.active {
+        display: flex;
+    }
+    
+    .code-modal {
+        background: #18181b;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        max-width: 700px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: auto;
+        padding: 2rem;
+    }
+    
+    .code-modal h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--accent-indigo);
+    }
+    
+    .code-modal pre {
+        background: #09090b;
+        padding: 1.25rem;
+        border-radius: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        color: #e4e4e7;
+        white-space: pre-wrap;
+        word-break: break-all;
+        overflow-x: auto;
+        margin-bottom: 1rem;
+        border: 1px solid var(--border-color);
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--text-muted);
+    }
+    
+    .empty-state h2 {
+        font-size: 1.25rem;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+    }
+    
+    @media (max-width: 768px) {
+        .history-table th:nth-child(4),
+        .history-table td:nth-child(4) {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-container">
+    <div class="history-header">
+        <h1>Execution History</h1>
+        <div class="filter-bar">
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Filter:</span>
+            <select onchange="window.location.href='/history?lang=' + this.value">
+                <option value="">All Languages</option>
+                {% for lang in languages %}
+                    <option value="{{ lang }}" {% if active_filter == lang %}selected{% endif %}>{{ lang|capitalize }}</option>
+                {% endfor %}
+            </select>
+            <a href="/dashboard" class="btn btn-secondary" style="padding: 0.4rem 0.75rem; font-size: 0.8rem;">← Dashboard</a>
+        </div>
+    </div>
+    
+    {% if history %}
+    <div class="glass-panel" style="padding: 0; overflow: hidden; border-radius: 12px;">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Language</th>
+                    <th>Output</th>
+                    <th>Time</th>
+                    <th>Memory</th>
+                    <th>Date</th>
+                    <th style="text-align:right;">Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in history %}
+                <tr>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ run.id }}</td>
+                    <td>
+                        <span class="lang-badge {{ run.language }}">{{ run.language }}</span>
+                    </td>
+                    <td>
+                        {% if run.error %}
+                            <span class="output-preview has-error" title="{{ run.error }}">{{ run.error[:60] }}</span>
+                        {% elif run.output %}
+                            <span class="output-preview" title="{{ run.output }}">{{ run.output[:60] }}</span>
+                        {% else %}
+                            <span class="output-preview">No output</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="metric">{{ run.execution_time or 0 }}<span class="metric-unit">s</span></span>
+                    </td>
+                    <td>
+                        <span class="metric">{{ run.memory_usage or 0 }}<span class="metric-unit">MB</span></span>
+                    </td>
+                    <td style="font-size: 0.8rem; color: var(--text-muted); white-space: nowrap;">
+                        {{ run.created_at.strftime('%b %d, %Y %H:%M') }}
+                    </td>
+                    <td style="text-align: right;">
+                        <button class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;" onclick="showRunDetails({{ run.id }})">
+                            View
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state glass-panel">
+        <h2>No executions found</h2>
+        <p>Run some code in the editor to see your execution history here.</p>
+        <a href="/dashboard" class="btn btn-primary" style="margin-top: 1.5rem;">Go to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Code Detail Modal -->
+<div id="code-modal" class="code-modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="code-modal">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 id="modal-title">Run Details</h3>
+            <button class="btn btn-secondary" onclick="closeModal()" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">✕ Close</button>
+        </div>
+        <h4 style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Source Code</h4>
+        <pre id="modal-code"></pre>
+        <h4 style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem;">Output</h4>
+        <pre id="modal-output"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Pre-serialize history data for modal display
+    const historyData = {
+        {% for run in history %}
+        {{ run.id }}: {
+            language: "{{ run.language }}",
+            source: {{ run.source_code | tojson }},
+            output: {{ (run.output or "No output") | tojson }},
+            error: {{ (run.error or "") | tojson }},
+            time: "{{ run.execution_time or 0 }}s",
+            memory: "{{ run.memory_usage or 0 }}MB"
+        },
+        {% endfor %}
+    };
+    
+    function showRunDetails(runId) {
+        const data = historyData[runId];
+        if (!data) return;
+        
+        document.getElementById('modal-title').innerText = `Run #${runId} — ${data.language}  (${data.time} / ${data.memory})`;
+        document.getElementById('modal-code').innerText = data.source;
+        
+        if (data.error) {
+            document.getElementById('modal-output').innerText = data.error;
+            document.getElementById('modal-output').style.color = 'var(--danger)';
+        } else {
+            document.getElementById('modal-output').innerText = data.output;
+            document.getElementById('modal-output').style.color = '#e4e4e7';
+        }
+        
+        document.getElementById('code-modal').classList.add('active');
+    }
+    
+    function closeModal() {
+        document.getElementById('code-modal').classList.remove('active');
+    }
+    
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+</script>
+{% endblock %}

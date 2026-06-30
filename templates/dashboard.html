@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CoreIDE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 2.5rem auto;
+        padding: 0 1.5rem;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+    }
+    
+    .stat-icon {
+        font-size: 2.25rem;
+        width: 60px;
+        height: 60px;
+        background: rgba(99, 102, 241, 0.08);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent-indigo);
+    }
+    
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .stat-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+    }
+    
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+        margin-top: 2px;
+    }
+    
+    .dashboard-sections {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2.5rem;
+    }
+    
+    .projects-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    
+    .section-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+    
+    .project-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .project-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+        height: 170px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: var(--transition-smooth);
+    }
+    
+    .project-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-indigo);
+        box-shadow: 0 8px 24px -6px rgba(99, 102, 241, 0.15);
+    }
+    
+    .project-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+        word-break: break-all;
+    }
+    
+    .project-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+    
+    .project-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+    
+    .project-lang-badge {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        color: var(--text-muted);
+    }
+    
+    .project-actions {
+        display: flex;
+        gap: 0.35rem;
+    }
+    
+    .project-actions .btn {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+        border-radius: 6px;
+    }
+    
+    .sidebar-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .creator-card, .uploader-card {
+        padding: 1.5rem;
+        border-radius: 12px;
+    }
+    
+    .creator-card h3, .uploader-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    
+    .history-list {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .history-item {
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: rgba(255, 255, 255, 0.01);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+        transition: var(--transition-smooth);
+    }
+    
+    .history-item:hover {
+        background: rgba(255, 255, 255, 0.03);
+    }
+    
+    .history-lang {
+        font-family: var(--font-mono);
+        color: var(--accent-indigo);
+        font-weight: 600;
+    }
+    
+    .history-metrics {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        text-align: right;
+    }
+    
+    @media (max-width: 900px) {
+        .dashboard-sections {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <!-- Stats Cards row -->
+    <div class="stats-grid">
+        <div class="stat-card glass-panel">
+            <div class="stat-icon">📁</div>
+            <div class="stat-info">
+                <span class="stat-label">Total Projects</span>
+                <span class="stat-value">{{ total_projects }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon">⚡</div>
+            <div class="stat-info">
+                <span class="stat-label">Code Runs</span>
+                <span class="stat-value">{{ total_executions }}</span>
+            </div>
+        </div>
+        
+        <div class="stat-card glass-panel">
+            <div class="stat-icon">💾</div>
+            <div class="stat-info">
+                <span class="stat-label">Cloud Space</span>
+                <span class="stat-value">Active</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-sections">
+        
+        <!-- Left Side: Project Manager Console -->
+        <div class="projects-section">
+            <div class="section-header">
+                <h2>My Projects</h2>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">{{ projects|length }} workspaces available</span>
+            </div>
+            
+            {% if projects %}
+                <div class="project-grid">
+                    {% for project in projects %}
+                        <div class="project-card glass-panel" id="project-{{ project.id }}">
+                            <div>
+                                <a href="/project/{{ project.id }}" class="project-title" title="Open project workspace">{{ project.project_name }}</a>
+                                <div class="project-meta">Updated {{ project.updated_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            </div>
+                            
+                            <div class="project-footer">
+                                <span class="project-lang-badge">Workspace</span>
+                                <div class="project-actions">
+                                    <a href="/project/{{ project.id }}" class="btn btn-primary">Open</a>
+                                    <a href="/project/{{ project.id }}/download" class="btn btn-secondary" title="Export as ZIP">📥</a>
+                                    <button class="btn btn-danger" onclick="deleteProject({{ project.id }}, '{{ project.project_name }}')" title="Delete project">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="glass-panel" style="padding: 3rem; text-align: center;">
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">No workspaces found. Create a project to start coding!</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('project_name').focus()">Create Starter Project</button>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Right Side Panel: Creator/Uploader & Execution histories -->
+        <div class="sidebar-panel">
+            
+            <!-- Create Project Card -->
+            <div class="creator-card glass-panel">
+                <h3>New Project</h3>
+                <form id="create-project-form" onsubmit="handleCreateProject(event)">
+                    <div class="form-group">
+                        <label for="project_name" class="form-label">Project Name</label>
+                        <input type="text" id="project_name" class="form-control" placeholder="e.g. hello_world" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="template" class="form-label">Language Boilerplate</label>
+                        <select id="template" class="form-control" style="background-color: var(--bg-dark);">
+                            <option value="python">Python 🐍</option>
+                            <option value="javascript">JavaScript 🟨</option>
+                            <option value="c">C Language 🔵</option>
+                            <option value="cpp">C++ Language 🔷</option>
+                            <option value="java">Java ☕</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">Initialize Project</button>
+                </form>
+            </div>
+            
+            <!-- Upload Project Card -->
+            <div class="uploader-card glass-panel">
+                <h3>Import ZIP Project</h3>
+                <form action="/project/upload" method="POST" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="file" class="form-label">Select Project Archive (.zip)</label>
+                        <input type="file" id="file" name="file" class="form-control" accept=".zip" required style="padding: 0.5rem 0.75rem;">
+                    </div>
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">Upload & Extract</button>
+                </form>
+            </div>
+            
+            <!-- Recent Executions Logs -->
+            <div>
+                <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 1rem;">Recent Run Logs</h3>
+                {% if recent_executions %}
+                    <ul class="history-list">
+                        {% for run in recent_executions %}
+                            <li class="history-item">
+                                <div>
+                                    <span class="history-lang">{{ run.language }}</span>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">{{ run.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                </div>
+                                <div class="history-metrics">
+                                    <div>Time: {{ run.execution_time }}s</div>
+                                    <div>Mem: {{ run.memory_usage }}MB</div>
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p style="font-size: 0.85rem; color: var(--text-muted);">No recent executions logged yet.</p>
+                {% endif %}
+            </div>
+            
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Create new project trigger via Rest API
+    async function handleCreateProject(e) {
+        e.preventDefault();
+        const projectName = document.getElementById('project_name').value.trim();
+        const template = document.getElementById('template').value;
+        
+        if (!projectName) return;
+        
+        try {
+            const res = await fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ project_name: projectName, template: template })
+            });
+            
+            if (!res.ok) throw new Error("Could not initialize project workspace.");
+            const project = await res.json();
+            
+            showToast("Workspace initialized!", "success");
+            // Redirect to editor
+            setTimeout(() => {
+                window.location.href = `/project/${project.id}`;
+            }, 500);
+            
+        } catch (err) {
+            showToast(err.message, "danger");
+        }
+    }
+    
+    // Delete project API trigger
+    async function deleteProject(projectId, name) {
+        if (!confirm(`Are you sure you want to permanently delete project "${name}"?`)) return;
+        
+        try {
+            const res = await fetch(`/api/projects/${projectId}`, {
+                method: 'DELETE'
+            });
+            
+            if (!res.ok) throw new Error("Could not delete workspace.");
+            
+            showToast("Project deleted.", "info");
+            
+            // Remove element from DOM
+            const card = document.getElementById(`project-${projectId}`);
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                card.style.transition = 'all 0.4s ease';
+                setTimeout(() => {
+                    card.remove();
+                    // Reload if no projects remain
+                    if (document.querySelectorAll('.project-card').length === 0) {
+                        window.location.reload();
+                    }
+                }, 400);
+            }
+        } catch (err) {
+            showToast(err.message, "danger");
+        }
+    }
+</script>
+{% endblock %}

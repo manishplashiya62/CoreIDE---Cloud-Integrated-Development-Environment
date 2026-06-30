@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - CoreIDE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 1100px;
+        margin: 3rem auto;
+        padding: 0 1.5rem;
+    }
+    
+    .admin-header {
+        margin-bottom: 2rem;
+    }
+    
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .admin-stat {
+        padding: 1.25rem;
+        text-align: center;
+        border-radius: 10px;
+    }
+    
+    .admin-stat-val {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--accent-indigo);
+        margin-top: 0.25rem;
+    }
+    
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1.5rem;
+    }
+    
+    .users-table th, .users-table td {
+        padding: 0.85rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .users-table th {
+        font-weight: 600;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .users-table tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    .badge {
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    
+    .badge-admin {
+        background: rgba(139, 92, 246, 0.15);
+        border: 1px solid var(--accent-violet);
+        color: var(--accent-violet);
+    }
+    
+    .badge-user {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Admin Control Panel</h1>
+        <p style="color: var(--text-muted);">Monitor workspace load, compile counts, and manage active developers</p>
+    </div>
+    
+    <!-- System Analytics Grid -->
+    <div class="admin-stats">
+        <div class="admin-stat glass-panel">
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Active Accounts</span>
+            <div class="admin-stat-val">{{ users|length }}</div>
+        </div>
+        
+        <div class="admin-stat glass-panel">
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Total Workspaces</span>
+            <div class="admin-stat-val">{{ projects_count }}</div>
+        </div>
+        
+        <div class="admin-stat glass-panel">
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Total Executions</span>
+            <div class="admin-stat-val">{{ executions_count }}</div>
+        </div>
+        
+        <div class="admin-stat glass-panel">
+            <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Avg Latency</span>
+            <div class="admin-stat-val">{{ avg_exec_time }}s</div>
+        </div>
+    </div>
+    
+    <!-- Users Account Management Table -->
+    <div class="glass-panel" style="padding: 2rem;">
+        <h2 style="font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem;">System Accounts</h2>
+        
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email Address</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_admin %}
+                                <span class="badge badge-admin">Administrator</span>
+                            {% else %}
+                                <span class="badge badge-user">Developer</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size: 0.8rem; color: var(--text-muted);">{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td style="text-align: right;">
+                            {% if user.id != current_user.id %}
+                                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Warning! Are you sure you want to permanently delete user &quot;{{ user.username }}&quot;? This action will destroy all of their projects and is irreversible.')" style="display: inline;">
+                                    <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: 4px;">Delete</button>
+                                </form>
+                            {% else %}
+                                <span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic; padding-right: 12px;">Active Session</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

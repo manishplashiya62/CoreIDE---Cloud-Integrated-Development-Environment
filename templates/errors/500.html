@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Internal Server Error - CoreIDE{% endblock %}
+
+{% block content %}
+<div class="auth-container glass-panel" style="text-align: center; max-width: 500px; margin: 6rem auto; padding: 3rem 2.5rem;">
+    <h1 style="font-size: 4.5rem; font-weight: 800; background: linear-gradient(135deg, var(--danger), var(--warning)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">500</h1>
+    <h2 style="font-size: 1.5rem; font-weight: 700; margin: 0.75rem 0;">Internal Server Error</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem; line-height: 1.5;">An unexpected issue occurred on the local code server. Please try refreshing or return to safety.</p>
+    <a href="/" class="btn btn-primary" style="width: 100%;">Return to Homepage</a>
+</div>
+{% endblock %}

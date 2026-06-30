@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CoreIDE - Cloud Integrated Development Environment{% endblock %}</title>
+    <meta name="description" content="CoreIDE is a browser-based integrated development environment supporting Python, JavaScript, C, C++, and Java with real-time compilation and an AI code assistant.">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <!-- Core Style Sheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Dynamic Alerts Stack -->
+    <div class="alert-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span>{{ message }}</span>
+                        <span style="cursor:pointer; margin-left: 12px; font-weight:bold;" onclick="this.parentElement.remove()">&times;</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <a href="/" class="nav-brand">⚡ CoreIDE<span>.io</span></a>
+        
+        <ul class="nav-links">
+            <li class="{% if request.path == '/' %}active{% endif %}"><a href="/">Home</a></li>
+            {% if current_user.is_authenticated %}
+                <li class="{% if request.path == '/dashboard' %}active{% endif %}"><a href="/dashboard">Dashboard</a></li>
+                <li class="{% if request.path == '/history' %}active{% endif %}"><a href="/history">History</a></li>
+                {% if current_user.is_admin %}
+                    <li class="{% if request.path == '/admin' %}active{% endif %}"><a href="/admin">Admin Panel</a></li>
+                {% endif %}
+            {% endif %}
+        </ul>
+        
+        <div class="nav-actions">
+            {% if current_user.is_authenticated %}
+                <span style="color: var(--text-muted); font-size: 0.9rem; margin-right: 0.5rem;">
+                    Hello, <a href="/profile" style="color: var(--text-primary); text-decoration: none; font-weight: 600; border-bottom: 1px dashed var(--accent-indigo);">{{ current_user.username }}</a>
+                </span>
+                <a href="/logout" class="btn btn-secondary">Logout</a>
+            {% else %}
+                <a href="/login" class="btn btn-secondary">Login</a>
+                <a href="/register" class="btn btn-primary">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    {% block footer %}
+    <footer style="border-top: 1px solid var(--border-color); padding: 2rem; text-align: center; margin-top: 4rem;">
+        <p style="font-size: 0.8rem; color: var(--text-muted);">Built with ❤️ using Flask & Monaco Editor &middot; <span style="color: var(--accent-indigo); font-weight: 600;">CoreIDE.io</span> &copy; 2026</p>
+    </footer>
+    {% endblock %}
+
+    <!-- Core Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}CoreIDE - Browser-Based Code Compiler & Web IDE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-tag">Virtual Execution Space</div>
+    <h1 class="hero-title">Write, Compile, and Run Code <span>Anywhere</span></h1>
+    <p class="hero-subtitle">
+        CoreIDE is a modern, lightweight, cloud-based coding space that lets you build, execute, and organize projects in C, C++, Python, Java, and JavaScript directly from your web browser. No local setup required.
+    </p>
+    
+    <div class="hero-buttons">
+        {% if current_user.is_authenticated %}
+            <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+        {% else %}
+            <a href="/register" class="btn btn-primary">Start Coding for Free</a>
+            <a href="/login" class="btn btn-secondary">Explore Workspace</a>
+        {% endif %}
+    </div>
+
+    <!-- Interactive Code Editor Mockup Preview -->
+    <div class="preview-container">
+        <div class="preview-bar">
+            <div class="preview-dot dot-red"></div>
+            <div class="preview-dot dot-yellow"></div>
+            <div class="preview-dot dot-green"></div>
+            <div class="preview-title">main.py - CoreIDE Workspace</div>
+        </div>
+        <div class="preview-editor">
+            <div class="preview-line">
+                <span class="line-num">1</span>
+                <span><span class="keyword">def</span> <span class="func">greet_developer</span>(name, lang):</span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">2</span>
+                <span>    <span class="comment"># CoreIDE executes scripts securely on cloud subprocesses</span></span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">3</span>
+                <span>    print(<span class="string">f"Compiling {lang} in browser... Hello, {name}!"</span>)</span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">4</span>
+                <span></span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">5</span>
+                <span><span class="keyword">if</span> __name__ == <span class="string">"__main__"</span>:</span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">6</span>
+                <span>    <span class="func">greet_developer</span>(<span class="string">"Developer"</span>, <span class="string">"Python 3.13"</span>)</span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">7</span>
+                <span></span>
+            </div>
+            <div class="preview-line">
+                <span class="line-num">8</span>
+                <span><span class="comment">&gt;&gt;&gt; Compiling Python 3.13 in browser... Hello, Developer!</span></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="features-section">
+    <h2 class="features-title">Everything you need to compile code</h2>
+    <p class="features-subtitle">Explore a feature-rich suite designed for students, educators, and software engineers alike.</p>
+    
+    <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card glass-panel">
+            <div class="feature-icon">💻</div>
+            <h3>Online Code Editor</h3>
+            <p>Powered by Monaco Editor (the heart of VS Code). Includes advanced syntax coloring, auto-completion, line folders, themes, and dynamic font resizing.</p>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="feature-card glass-panel">
+            <div class="feature-icon">⚡</div>
+            <h3>Multi-Language Execution</h3>
+            <p>Write and execute scripts in C (gcc), C++ (g++), Python, Java, and JavaScript (Node.js) inside secure isolated temporary sessions with standard inputs.</p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="feature-card glass-panel">
+            <div class="feature-icon">📁</div>
+            <h3>Project & File Tree</h3>
+            <p>Create recursive folders, add or remove files, upload existing project ZIP archives, or download your work back to your local computer.</p>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="feature-card glass-panel">
+            <div class="feature-icon">🤖</div>
+            <h3>AI Code Companion</h3>
+            <p>Stuck on an error? Ask the built-in AI Coding Assistant to automatically inspect your code, explain logic, debug syntax issues, or optimize performance.</p>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="feature-card glass-panel">
+            <div class="feature-icon">📜</div>
+            <h3>Run Histories</h3>
+            <p>Review logs of past program executions, tracking CPU run times, peak memory footprints, compile errors, and standard terminal outputs.</p>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="feature-card glass-panel">
+            <div class="feature-icon">🛡️</div>
+            <h3>Secure Environment</h3>
+            <p>Runs your scripts safely with resource clamps. Features process isolation timeouts (5s max) to instantly stop run-away infinite loops.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
